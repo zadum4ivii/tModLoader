@@ -89,6 +89,18 @@ namespace Terraria.ModLoader
 			Interface.errorMessage.SetFile(file);
 		}
 
+		internal static void LogJSONError(string jsonfilename, Exception e)
+		{
+			Directory.CreateDirectory(LogPath);
+			string file = LogPath + Path.DirectorySeparatorChar + "Compile Errors.txt";
+			using (StreamWriter writer = File.CreateText(file))
+			{
+				writer.WriteLine("An error occured parsing the json file: " + jsonfilename);
+				writer.WriteLine(e.Message);
+				writer.WriteLine(e.StackTrace);
+			}
+		}
+
 		internal static void LogLoadingError(string modFile, Exception e)
 		{
 			Directory.CreateDirectory(LogPath);

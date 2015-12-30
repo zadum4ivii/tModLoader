@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,17 +9,42 @@ namespace Terraria.ModLoader
 {
 	internal class BuildProperties
 	{
+		[JsonProperty]
 		internal string[] dllReferences = new string[0];
+		[JsonProperty]
 		internal string[] modReferences = new string[0];
+		[JsonProperty]
 		internal string author = "";
+		[JsonProperty]
 		internal string version = "";
+		[JsonProperty]
 		internal string displayName = "";
+		[JsonProperty]
 		internal bool noCompile = false;
 
 		internal static BuildProperties ReadBuildFile(string modDir)
 		{
-			string propertiesFile = modDir + Path.DirectorySeparatorChar + "build.txt";
 			BuildProperties properties = new BuildProperties();
+
+			string propertiesFile = modDir + Path.DirectorySeparatorChar + "build.json";
+			if (File.Exists(propertiesFile))
+			{
+				JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings()
+				{
+					MissingMemberHandling = MissingMemberHandling.Error,
+				};
+				try
+				{
+					JsonConvert.PopulateObject(File.ReadAllText(propertiesFile), properties, jsonSerializerSettings);
+					return properties;
+				}
+				catch (Exception e)
+				{
+					ErrorLogger.LogJSONError(propertiesFile, e);
+				}
+			}
+
+			propertiesFile = modDir + Path.DirectorySeparatorChar + "build.txt";
 			if (!File.Exists(propertiesFile))
 			{
 				return properties;

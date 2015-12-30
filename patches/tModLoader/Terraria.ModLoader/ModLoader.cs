@@ -602,6 +602,10 @@ namespace Terraria.ModLoader
 						{
 							continue;
 						}
+						if (resource.Substring(modToBuild.Length + 1) == "build.json")
+						{
+							continue;
+						}
 						string resourcePath = resource.Replace(ModSourcePath + Path.DirectorySeparatorChar, null);
 						resourcePath = resourcePath.Replace(Path.DirectorySeparatorChar, '/');
 						byte[] buffer = File.ReadAllBytes(resource);
