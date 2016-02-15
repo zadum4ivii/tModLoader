@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework.Audio;
 
 namespace Terraria.ModLoader
-{
+{	
 	public class MusicWrapper
 	{
 		internal Cue cue;
@@ -77,7 +77,7 @@ namespace Terraria.ModLoader
 				{
 					this.Stop();
 					modMusic = value;
-					if (modMusic != null)
+					if (modMusic != null && !(modMusic is DynamicSoundEffectInstance))
 					{
 						modMusic.IsLooped = true;
 					}
@@ -86,7 +86,7 @@ namespace Terraria.ModLoader
 				else
 				{
 					modMusic = value;
-					if (modMusic != null)
+					if (modMusic != null && !(modMusic is DynamicSoundEffectInstance))
 					{
 						modMusic.IsLooped = true;
 					}

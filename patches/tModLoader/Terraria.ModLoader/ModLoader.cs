@@ -14,6 +14,7 @@ using Terraria.ID;
 using Terraria.ModLoader.Default;
 using Terraria.ModLoader.Exceptions;
 using Terraria.ModLoader.IO;
+using Microsoft.Xna.Framework.Media;
 
 namespace Terraria.ModLoader
 {
@@ -45,7 +46,7 @@ namespace Terraria.ModLoader
 		private static readonly Stack<string> loadOrder = new Stack<string>();
 		private static readonly IDictionary<string, byte[]> files = new Dictionary<string, byte[]>();
 		private static readonly IDictionary<string, Texture2D> textures = new Dictionary<string, Texture2D>();
-		private static readonly IDictionary<string, SoundEffect> sounds = new Dictionary<string, SoundEffect>();
+		private static readonly IDictionary<string, SoundEffectWrapper> sounds = new Dictionary<string, SoundEffectWrapper>();
 		internal static readonly IDictionary<string, Tuple<Mod, string, string>> modHotKeys = new Dictionary<string, Tuple<Mod, string, string>>();
 
 		private static void LoadReferences()
@@ -371,7 +372,7 @@ namespace Terraria.ModLoader
 								string soundPath = Path.ChangeExtension(path, null);
 								using (MemoryStream buffer = new MemoryStream(data))
 								{
-									sounds[soundPath] = SoundEffect.FromStream(buffer);
+									sounds[soundPath] = new SoundEffectWrapper(SoundEffect.FromStream(buffer));
 								}
 								break;
 							case ".mp3":
@@ -379,7 +380,8 @@ namespace Terraria.ModLoader
 								string wavCacheFilename = mp3Path.Replace('/', '_') + "_" + properties.version + ".wav";
 								if (WAVCacheIO.WAVCacheAvailable(wavCacheFilename))
 								{
-									sounds[mp3Path] = SoundEffect.FromStream(WAVCacheIO.GetWavStream(wavCacheFilename));
+									sounds[mp3Path] = new SoundEffectWrapper(wavCacheFilename);// SoundEffect.FromStream(WAVCacheIO.GetWavStream(wavCacheFilename));
+									//DynamicSoundEffectInstance a = new DynamicSoundEffectInstance()
 									break;
 								}
 								ushort wFormatTag = 1;
@@ -420,7 +422,7 @@ namespace Terraria.ModLoader
 											writer.Write((UInt32)(wavDataLength));
 											output.Position = 0;
 											WAVCacheIO.SaveWavStream(output, wavCacheFilename);
-											sounds[mp3Path] = SoundEffect.FromStream(output);
+											sounds[mp3Path] = new SoundEffectWrapper(wavCacheFilename);// SoundEffect.FromStream(output);
 										}
 									}
 								}
@@ -886,7 +888,46 @@ namespace Terraria.ModLoader
 			return modTextures;
 		}
 
+		public static bool SoundEffectExists(string name)
+		{
+			if (sounds[name].SoundEffectExists())
+			{
+				return true;
+			}
+			return false;
+		}
+
+		public static SoundEffectInstance GetSoundInstance(string name)
+		{
+			if (Main.dedServ)
+				return null;
+			if (!SoundExists(name))
+			{
+				throw new MissingResourceException("Missing sound " + name);
+			}
+			if (sounds[name].SoundEffectExists())
+			{
+				throw new Exception("The sound " + name + " uses SoundEffect, use GetSound");
+			}
+			return sounds[name].GetSoundEffectInstance();
+		}
+
 		public static SoundEffect GetSound(string name)
+		{
+			if (Main.dedServ)
+				return null;
+			if (!SoundExists(name))
+			{
+				throw new MissingResourceException("Missing sound " + name);
+			}
+			if (!sounds[name].SoundEffectExists())
+			{
+				throw new Exception("The sound " + name + " does not have a SoundEffect class to save memory, please use GetSoundInstance");
+			}
+			return sounds[name].GetSoundEffect();
+		}
+
+		public static SoundEffectWrapper GetSoundWrapper(string name)
 		{
 			if (Main.dedServ)
 				return null;

@@ -1049,7 +1049,7 @@ namespace Terraria.ModLoader
 			if (modSound != null)
 			{
 				SoundLoader.modSounds[type][id] = modSound;
-				modSound.sound = ModLoader.GetSound(soundPath);
+				modSound.sound = ModLoader.GetSoundWrapper(soundPath);
 			}
 		}
 
@@ -1362,6 +1362,11 @@ namespace Terraria.ModLoader
 		public SoundEffect GetSound(string name)
 		{
 			return ModLoader.GetSound(FileName(name));
+		}
+
+		public SoundEffectInstance GetSoundInstance(string name)
+		{
+			return ModLoader.GetSoundInstance(FileName(name));
 		}
 
 		public bool SoundExists(string name)

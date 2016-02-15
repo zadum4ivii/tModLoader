@@ -6,7 +6,7 @@ namespace Terraria.ModLoader
 {
 	public class ModSound
 	{
-		public SoundEffect sound
+		public SoundEffectWrapper sound
 		{
 			get;
 			internal set;
