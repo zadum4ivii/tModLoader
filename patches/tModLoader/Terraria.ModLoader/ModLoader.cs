@@ -605,7 +605,7 @@ namespace Terraria.ModLoader
 			{
 				var convert = expr.Body as UnaryExpression;
 				var makeDelegate = convert.Operand as MethodCallExpression;
-				var methodArg = makeDelegate.Arguments[2] as ConstantExpression;
+				var methodArg = makeDelegate.Object as ConstantExpression;
 				method = methodArg.Value as MethodInfo;
 				if (method == null) throw new NullReferenceException();
 			}

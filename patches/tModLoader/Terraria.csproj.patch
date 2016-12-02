@@ -1,12 +1,24 @@
 --- src/Terraria\Terraria.csproj
 +++ src/tModLoader\Terraria.csproj
-@@ -46,11 +_,15 @@
+@@ -5,8 +_,8 @@
+     <Configuration Condition=" '$(Configuration)' == '' ">WindowsDebug</Configuration>
+     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+     <AssemblyName>Terraria</AssemblyName>
+-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
++    <TargetFrameworkProfile></TargetFrameworkProfile>
+     <WarningLevel>4</WarningLevel>
+     <DebugSymbols>true</DebugSymbols>
+     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+@@ -45,12 +_,16 @@
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'LinuxServerRelease|x86'">
      <OutputPath>bin\x86\LinuxServerRelease\</OutputPath>
      <DefineConstants>SERVER; LINUX</DefineConstants>
-   </PropertyGroup>
++  </PropertyGroup>
 +  <PropertyGroup>
 +    <ApplicationIcon>Icon.ico</ApplicationIcon>
-+  </PropertyGroup>
+   </PropertyGroup>
    <Choose>
      <When Condition="$(DefineConstants.Contains('DEBUG'))">
        <PropertyGroup>
