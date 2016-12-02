@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Xml;
 using System.Collections.Generic;
@@ -14,6 +13,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Security;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Terraria.ModLoader.UI
 {
@@ -285,7 +285,7 @@ namespace Terraria.ModLoader.UI
 			}
 		}
 
-		public void UploadComplete(Object sender, UploadValuesCompletedEventArgs e)
+		public async void UploadComplete(Object sender, UploadValuesCompletedEventArgs e)
 		{
 			if (e.Error != null)
 			{
@@ -310,14 +310,8 @@ namespace Terraria.ModLoader.UI
 				XmlDocument xmlDoc = new XmlDocument();
 				byte[] result = e.Result;
 				xmlDoc.LoadXml(Encoding.UTF8.GetString(result, 0, result.Length));
-
-				// TODO: UI will still be unresponsive here
-				TmodFile[] modFiles = ModLoader.FindMods();
-				List<BuildProperties> modBuildProperties = new List<BuildProperties>();
-				foreach (TmodFile tmodfile in modFiles)
-				{
-					modBuildProperties.Add(BuildProperties.ReadModFile(tmodfile));
-				}
+				List<BuildProperties> modBuildProperties = await Task.Run(() =>
+					ModLoader.FindMods().Select(BuildProperties.ReadModFile).ToList());
 				PopulateFromXML(modBuildProperties, xmlDoc);
 				loaded = true;
 			}
