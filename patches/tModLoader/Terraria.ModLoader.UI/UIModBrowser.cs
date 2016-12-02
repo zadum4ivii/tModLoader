@@ -258,18 +258,17 @@ namespace Terraria.ModLoader.UI
 					{"modloaderversion", ModLoader.versionedName}
 				};
 
-				Task<byte[]> responseTask;
-				using (WebClient client = new WebClient())
-				{
-					ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true;
-					responseTask = client.UploadValuesTaskAsync(new Uri(url), "POST", values);
-				}
-
 				Task<List<BuildProperties>> scanModsTask =
 					Task.Run(() => ModLoader.FindMods().Select(BuildProperties.ReadModFile).ToList());
 
+				byte[] result;
+				using (WebClient client = new WebClient())
+				{
+					ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true;
+					result = await client.UploadValuesTaskAsync(new Uri(url), "POST", values);
+				}
+
 				XmlDocument xmlDoc = new XmlDocument();
-				byte[] result = await responseTask;
 				xmlDoc.LoadXml(Encoding.UTF8.GetString(result, 0, result.Length));
 				PopulateFromXML(await scanModsTask, xmlDoc);
 			}
