@@ -237,20 +237,15 @@ namespace Terraria.ModLoader.UI
 		public override void OnActivate()
 		{
 			Main.clrInput();
-			uITextPanel.SetText("Mod Browser", 0.8f, true);
 		}
 
-		private void PopulateModBrowser() 
-		{
-			SynchronizationContext.Current.Send(_ => AsyncPopulateModBrowser(), null);
-		}
-
-		private async void AsyncPopulateModBrowser()
+		private async void PopulateModBrowser()
 		{
 			try
 			{
 				loading = true;
 				modListAll.Clear();
+				SortList();
 
 				ServicePointManager.Expect100Continue = false;
 				string url = "http://javid.ddns.net/tModLoader/listmods.php";
@@ -271,12 +266,14 @@ namespace Terraria.ModLoader.UI
 				XmlDocument xmlDoc = new XmlDocument();
 				xmlDoc.LoadXml(Encoding.UTF8.GetString(result, 0, result.Length));
 				PopulateFromXML(await scanModsTask, xmlDoc);
+				
+				SetHeading("Mod Browser");
 			}
 			catch (WebException e)
 			{
 				if (e.Status == WebExceptionStatus.Timeout)
 				{
-					uITextPanel.SetText("Mod Browser OFFLINE (Busy)", 0.8f, true);
+					SetHeading("Mod Browser OFFLINE (Busy)");
 					return;
 				}
 				if (e.Status == WebExceptionStatus.ProtocolError)
@@ -284,11 +281,11 @@ namespace Terraria.ModLoader.UI
 					var resp = (HttpWebResponse) e.Response;
 					if (resp.StatusCode == HttpStatusCode.NotFound)
 					{
-						uITextPanel.SetText("Mod Browser OFFLINE (404)", 0.8f, true);
+						SetHeading("Mod Browser OFFLINE (404)");
 						return;
 					}
-					uITextPanel.SetText("Mod Browser OFFLINE..", 0.8f, true);
 				}
+				SetHeading("Mod Browser OFFLINE..");
 			}
 			catch (Exception e)
 			{
@@ -339,11 +336,17 @@ namespace Terraria.ModLoader.UI
 							}
 						}
 						UIModDownloadItem modItem = new UIModDownloadItem(displayname, name, version, author, description, homepage, download, downloads, timeStamp, update, exists);
-						modListAll.Add(modItem);
+						modListAll._items.Add(modItem);//add directly to the underlying, SortList will repopulate it anyway
 					}
 					SortList();
 				}
 			}
+		}
+
+		private void SetHeading(string heading)
+		{
+			uITextPanel.SetText(heading, 0.8f, true);
+			uITextPanel.Recalculate();
 		}
 
 		public XmlDocument GetDataFromUrl(string url)
@@ -358,20 +361,6 @@ namespace Terraria.ModLoader.UI
 				urlData.Load(reader);
 			}
 			return urlData;
-		}
-
-		HttpStatusCode GetHttpStatusCode(Exception err)
-		{
-			if (err is WebException)
-			{
-				WebException we = (WebException)err;
-				if (we.Response is HttpWebResponse)
-				{
-					HttpWebResponse response = (HttpWebResponse)we.Response;
-					return response.StatusCode;
-				}
-			}
-			return 0;
 		}
 	}
 
