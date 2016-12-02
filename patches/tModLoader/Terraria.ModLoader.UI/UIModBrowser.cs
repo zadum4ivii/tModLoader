@@ -1,19 +1,18 @@
 using System;
-using System.IO;
-using System.Xml;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
-using Terraria.ModLoader.IO;
-using System.Net;
-using Microsoft.Xna.Framework.Graphics;
-using System.Reflection;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Net.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Terraria.ModLoader.UI
 {
@@ -25,7 +24,8 @@ namespace Terraria.ModLoader.UI
 		public UITextPanel<string> uITextPanel;
 		UIInputTextField filterTextBox;
 		private List<UICycleImage> _categoryButtons = new List<UICycleImage>();
-		public bool loaded = false;
+		private UITextPanel<string> reloadButton;
+		public bool loading;
 		public SortModes sortMode = SortModes.RecentlyUpdated;
 		public UpdateFilter updateFilterMode = UpdateFilter.Available;
 		public SearchFilter searchFilterMode = SearchFilter.Name;
@@ -33,8 +33,8 @@ namespace Terraria.ModLoader.UI
 		private bool updateAvailable;
 		private string updateText;
 		private string updateURL;
-		public bool aModUpdated = false;
-		public bool aNewModDownloaded = false;
+		public bool aModUpdated;
+		public bool aNewModDownloaded;
 
 		public override void OnInitialize()
 		{
@@ -70,121 +70,116 @@ namespace Terraria.ModLoader.UI
 			uITextPanel.SetPadding(15f);
 			uITextPanel.BackgroundColor = new Color(73, 94, 171);
 			uIElement.Append(uITextPanel);
-			UITextPanel<string> button = new UITextPanel<string>("Reload List", 1f, false);
-			button.Width.Set(-10f, 0.5f);
-			button.Height.Set(25f, 0f);
-			button.VAlign = 1f;
-			button.Top.Set(-65f, 0f);
-			button.OnMouseOver += new UIElement.MouseEvent(FadedMouseOver);
-			button.OnMouseOut += new UIElement.MouseEvent(FadedMouseOut);
-			button.OnClick += new UIElement.MouseEvent(ReloadList);
-			uIElement.Append(button);
+			reloadButton = new UITextPanel<string>("Loading...", 1f, false);
+			reloadButton.Width.Set(-10f, 0.5f);
+			reloadButton.Height.Set(25f, 0f);
+			reloadButton.VAlign = 1f;
+			reloadButton.Top.Set(-65f, 0f);
+			reloadButton.OnMouseOver += FadedMouseOver;
+			reloadButton.OnMouseOut += FadedMouseOut;
+			reloadButton.OnClick += ReloadList;
+			uIElement.Append(reloadButton);
 			UITextPanel<string> button3 = new UITextPanel<string>("Back", 1f, false);
 			button3.Width.Set(-10f, 0.5f);
 			button3.Height.Set(25f, 0f);
 			button3.VAlign = 1f;
 			button3.Top.Set(-20f, 0f);
-			button3.OnMouseOver += new UIElement.MouseEvent(FadedMouseOver);
-			button3.OnMouseOut += new UIElement.MouseEvent(FadedMouseOut);
-			button3.OnClick += new UIElement.MouseEvent(BackClick);
+			button3.OnMouseOver += FadedMouseOver;
+			button3.OnMouseOut += FadedMouseOut;
+			button3.OnClick += BackClick;
 			uIElement.Append(button3);
-			base.Append(uIElement);
+			Append(uIElement);
 			UIElement uIElement2 = new UIElement();
 			uIElement2.Width.Set(0f, 1f);
 			uIElement2.Height.Set(32f, 0f);
 			uIElement2.Top.Set(10f, 0f);
 			Texture2D texture = Texture2D.FromStream(Main.instance.GraphicsDevice, Assembly.GetExecutingAssembly().GetManifestResourceStream("Terraria.ModLoader.UI.UIModBrowserIcons.png"));
-			UICycleImage uIToggleImage;
 			for (int j = 0; j < 2; j++)
 			{
+				UICycleImage uIToggleImage;
 				if (j == 0)
 				{
 					uIToggleImage = new UICycleImage(texture, 5, 32, 32, 0, 0);
 					uIToggleImage.setCurrentState((int)sortMode);
-					uIToggleImage.OnClick += (a, b) => Interface.modBrowser.sortMode = sortMode.Next();
-					uIToggleImage.OnClick += new UIElement.MouseEvent(this.SortList);
+					uIToggleImage.OnClick += (a, b) => {
+						sortMode = sortMode.Next();
+						SortList();
+					};
 				}
 				else
 				{
 					uIToggleImage = new UICycleImage(texture, 3, 32, 32, 34, 0);
 					uIToggleImage.setCurrentState((int)updateFilterMode);
-					uIToggleImage.OnClick += (a, b) => Interface.modBrowser.updateFilterMode = updateFilterMode.Next();
-					uIToggleImage.OnClick += new UIElement.MouseEvent(this.SortList);
+					uIToggleImage.OnClick += (a, b) => {
+						updateFilterMode = updateFilterMode.Next();
+						SortList();
+					};
 				}
-				uIToggleImage.Left.Set((float)(j * 36 + 8), 0f);
+				uIToggleImage.Left.Set(j * 36 + 8, 0f);
 				_categoryButtons.Add(uIToggleImage);
 				uIElement2.Append(uIToggleImage);
 			}
 			filterTextBox = new UIInputTextField("Type to search");
 			filterTextBox.Top.Set(5, 0f);
 			filterTextBox.Left.Set(-150, 1f);
-			filterTextBox.OnTextChange += new UIInputTextField.EventHandler(SortList);
+			filterTextBox.OnTextChange += (sender, e) => SortList();
 			uIElement2.Append(filterTextBox);
 			UICycleImage SearchFilterToggle = new UICycleImage(texture, 2, 32, 32, 68, 0);
 			SearchFilterToggle.setCurrentState((int)searchFilterMode);
-			SearchFilterToggle.OnClick += (a, b) => Interface.modBrowser.searchFilterMode = searchFilterMode.Next();
-			SearchFilterToggle.OnClick += new UIElement.MouseEvent(this.SortList);
+			SearchFilterToggle.OnClick += (a, b) => {
+				searchFilterMode = searchFilterMode.Next();
+				SortList();
+			};
 			SearchFilterToggle.Left.Set(545f, 0f);
 			_categoryButtons.Add(SearchFilterToggle);
 			uIElement2.Append(SearchFilterToggle);
 			uIPanel.Append(uIElement2);
-		}
-
-		private void SortList(object sender, EventArgs e)
-		{
-			SortList();
-		}
-
-		private void SortList(UIMouseEvent evt, UIElement listeningElement)
-		{
-			SortList();
+			
+			PopulateModBrowser();
 		}
 
 		private void SortList()
 		{
 			filter = filterTextBox.currentString;
 			modList.Clear();
-			foreach (UIModDownloadItem item in modListAll._items.Where(item => item.PassFilters()))
-			{
-				modList.Add(item);
-			}
+			modList.AddRange(modListAll._items.Where(item => item.PassFilters()));
 			modList.UpdateOrder();
 		}
 
 		public override void Draw(SpriteBatch spriteBatch)
 		{
 			base.Draw(spriteBatch);
-			for (int i = 0; i < this._categoryButtons.Count; i++)
+			for (int i = 0; i < _categoryButtons.Count; i++)
 			{
-				if (this._categoryButtons[i].IsMouseHovering)
+				if (_categoryButtons[i].IsMouseHovering)
 				{
 					string text;
 					switch (i)
 					{
 						case 0:
-							text = Interface.modBrowser.sortMode.ToFriendlyString();
+							text = sortMode.ToFriendlyString();
 							break;
 						case 1:
-							text = Interface.modBrowser.updateFilterMode.ToFriendlyString();
+							text = updateFilterMode.ToFriendlyString();
 							break;
 						case 2:
-							text = Interface.modBrowser.searchFilterMode.ToFriendlyString();
+							text = searchFilterMode.ToFriendlyString();
 							break;
 						default:
 							text = "None";
 							break;
 					}
 					float x = Main.fontMouseText.MeasureString(text).X;
-					Vector2 vector = new Vector2((float)Main.mouseX, (float)Main.mouseY) + new Vector2(16f);
-					if (vector.Y > (float)(Main.screenHeight - 30))
+					Vector2 vector = new Vector2(Main.mouseX, Main.mouseY) + new Vector2(16f);
+					if (vector.Y > Main.screenHeight - 30)
 					{
-						vector.Y = (float)(Main.screenHeight - 30);
+						vector.Y = Main.screenHeight - 30;
 					}
-					if (vector.X > (float)Main.screenWidth - x)
+					if (vector.X > Main.screenWidth - x)
 					{
-						vector.X = (float)(Main.screenWidth - 460);
+						vector.X = Main.screenWidth - 460;
 					}
-					Utils.DrawBorderStringFourWay(spriteBatch, Main.fontMouseText, text, vector.X, vector.Y, new Color((int)Main.mouseTextColor, (int)Main.mouseTextColor, (int)Main.mouseTextColor, (int)Main.mouseTextColor), Color.Black, Vector2.Zero, 1f);
+					Utils.DrawBorderStringFourWay(spriteBatch, Main.fontMouseText, text, vector.X, vector.Y, new Color(Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor), Color.Black, Vector2.Zero, 1f);
 					return;
 				}
 			}
@@ -198,175 +193,157 @@ namespace Terraria.ModLoader.UI
 			}
 		}
 
-		private static void FadedMouseOver(UIMouseEvent evt, UIElement listeningElement)
+		private void FadedMouseOver(UIMouseEvent evt, UIElement listeningElement)
 		{
 			Main.PlaySound(12, -1, -1, 1);
 			((UIPanel)evt.Target).BackgroundColor = new Color(73, 94, 171);
 		}
 
-		private static void FadedMouseOut(UIMouseEvent evt, UIElement listeningElement)
+		private void FadedMouseOut(UIMouseEvent evt, UIElement listeningElement)
 		{
 			((UIPanel)evt.Target).BackgroundColor = new Color(63, 82, 151) * 0.7f;
 		}
 
-		private static void BackClick(UIMouseEvent evt, UIElement listeningElement)
+		private void BackClick(UIMouseEvent evt, UIElement listeningElement)
 		{
 			Main.PlaySound(11, -1, -1, 1);
 			Main.menuMode = 0;
-			if (Interface.modBrowser.aModUpdated)
+			if (aModUpdated)
 			{
 				Interface.infoMessage.SetMessage("You have updated a mod. Remember to reload mods for it to take effect.");
 				Interface.infoMessage.SetGotoMenu(0);
 				Main.menuMode = Interface.infoMessageID;
 			}
-			else if (Interface.modBrowser.aNewModDownloaded)
+			else if (aNewModDownloaded)
 			{
 				Interface.infoMessage.SetMessage("Your recently downloaded mods are currently disabled. Remember to enable and reload if you intend to use them.");
 				Interface.infoMessage.SetGotoMenu(0);
 				Main.menuMode = Interface.infoMessageID;
 			}
-			Interface.modBrowser.aModUpdated = false;
-			Interface.modBrowser.aNewModDownloaded = false;
+			aModUpdated = false;
+			aNewModDownloaded = false;
 		}
 
-		private static void ReloadList(UIMouseEvent evt, UIElement listeningElement)
+		private void ReloadList(UIMouseEvent evt, UIElement listeningElement)
 		{
-			Main.PlaySound(10, -1, -1, 1);
-			Interface.modBrowser.loaded = false;
-			Main.menuMode = Interface.modBrowserID;
+			if (loading)
+				return;
+
+			Main.PlaySound(10);
+			reloadButton.SetText("Reloading...");
+			PopulateModBrowser();
 		}
 
 		public override void OnActivate()
 		{
 			Main.clrInput();
-			if (!loaded)
-			{
-				uITextPanel.SetText("Mod Browser", 0.8f, true);
-				modListAll.Clear();
-				try
-				{
-					ServicePointManager.Expect100Continue = false;
-					string url = "http://javid.ddns.net/tModLoader/listmods.php";
-					var values = new NameValueCollection
-					{
-						{ "modloaderversion", ModLoader.versionedName },
-					};
-					using (WebClient client = new WebClient())
-					{
-						ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((sender, certificate, chain, policyErrors) => { return true; });
-						client.UploadValuesCompleted += new UploadValuesCompletedEventHandler(UploadComplete);
-						client.UploadValuesAsync(new Uri(url), "POST", values);
-					}
-				}
-				catch (WebException e)
-				{
-					if (e.Status == WebExceptionStatus.Timeout)
-					{
-						uITextPanel.SetText("Mod Browser OFFLINE (Busy)", 0.8f, true);
-						return;
-					}
-					if (e.Status == WebExceptionStatus.ProtocolError)
-					{
-						var resp = (HttpWebResponse)e.Response;
-						if (resp.StatusCode == HttpStatusCode.NotFound)
-						{
-							uITextPanel.SetText("Mod Browser OFFLINE (404)", 0.8f, true);
-							return;
-						}
-						uITextPanel.SetText("Mod Browser OFFLINE..", 0.8f, true);
-						return;
-					}
-				}
-				catch (Exception e)
-				{
-					ErrorLogger.LogModBrowserException(e);
-					return;
-				}
-			}
+			uITextPanel.SetText("Mod Browser", 0.8f, true);
 		}
 
-		public async void UploadComplete(Object sender, UploadValuesCompletedEventArgs e)
+		private void PopulateModBrowser() 
 		{
-			if (e.Error != null)
-			{
-				if (e.Cancelled)
-				{
-				}
-				else
-				{
-					HttpStatusCode httpStatusCode = GetHttpStatusCode(e.Error);
-					if (httpStatusCode == HttpStatusCode.ServiceUnavailable)
-					{
-						uITextPanel.SetText("Mod Browser OFFLINE (Busy)", 0.8f, true);
-					}
-					else
-					{
-						uITextPanel.SetText("Mod Browser OFFLINE (Unknown)", 0.8f, true);
-					}
-				}
-			}
-			else if (!e.Cancelled)
-			{
-				XmlDocument xmlDoc = new XmlDocument();
-				byte[] result = e.Result;
-				xmlDoc.LoadXml(Encoding.UTF8.GetString(result, 0, result.Length));
-				List<BuildProperties> modBuildProperties = await Task.Run(() =>
-					ModLoader.FindMods().Select(BuildProperties.ReadModFile).ToList());
-				PopulateFromXML(modBuildProperties, xmlDoc);
-				loaded = true;
-			}
+			SynchronizationContext.Current.Send(_ => AsyncPopulateModBrowser(), null);
 		}
 
-		private void PopulateFromXML(List<BuildProperties> modBuildProperties, XmlDocument xmlDoc)
+		private async void AsyncPopulateModBrowser()
 		{
 			try
 			{
-				foreach (XmlNode xmlNode in xmlDoc.DocumentElement)
+				loading = true;
+				modListAll.Clear();
+
+				ServicePointManager.Expect100Continue = false;
+				string url = "http://javid.ddns.net/tModLoader/listmods.php";
+				var values = new NameValueCollection {
+					{"modloaderversion", ModLoader.versionedName}
+				};
+
+				Task<byte[]> responseTask;
+				using (WebClient client = new WebClient())
 				{
-					if (xmlNode.Name.Equals("update"))
+					ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true;
+					responseTask = client.UploadValuesTaskAsync(new Uri(url), "POST", values);
+				}
+
+				Task<List<BuildProperties>> scanModsTask =
+					Task.Run(() => ModLoader.FindMods().Select(BuildProperties.ReadModFile).ToList());
+
+				XmlDocument xmlDoc = new XmlDocument();
+				byte[] result = await responseTask;
+				xmlDoc.LoadXml(Encoding.UTF8.GetString(result, 0, result.Length));
+				PopulateFromXML(await scanModsTask, xmlDoc);
+			}
+			catch (WebException e)
+			{
+				if (e.Status == WebExceptionStatus.Timeout)
+				{
+					uITextPanel.SetText("Mod Browser OFFLINE (Busy)", 0.8f, true);
+					return;
+				}
+				if (e.Status == WebExceptionStatus.ProtocolError)
+				{
+					var resp = (HttpWebResponse) e.Response;
+					if (resp.StatusCode == HttpStatusCode.NotFound)
 					{
-						updateAvailable = true;
-						updateText = xmlNode.SelectSingleNode("message").InnerText;
-						updateURL = xmlNode.SelectSingleNode("url").InnerText;
+						uITextPanel.SetText("Mod Browser OFFLINE (404)", 0.8f, true);
+						return;
 					}
-					else if (xmlNode.Name.Equals("modlist"))
-					{
-						foreach (XmlNode xmlNode2 in xmlNode)
-						{
-							string displayname = xmlNode2.SelectSingleNode("displayname").InnerText;
-							string name = xmlNode2.SelectSingleNode("name").InnerText;
-							string version = xmlNode2.SelectSingleNode("version").InnerText;
-							string author = xmlNode2.SelectSingleNode("author").InnerText;
-							string description = xmlNode2.SelectSingleNode("description").InnerText;
-							string homepage = xmlNode2.SelectSingleNode("homepage").InnerText;
-							string download = xmlNode2.SelectSingleNode("download").InnerText;
-							string timeStamp = xmlNode2.SelectSingleNode("updateTimeStamp").InnerText;
-							int downloads;
-							Int32.TryParse(xmlNode2.SelectSingleNode("downloads").InnerText, out downloads);
-							bool exists = false;
-							bool update = false;
-							foreach (BuildProperties bp in modBuildProperties)
-							{
-								if (bp.displayName.Equals(displayname))
-								{
-									exists = true;
-									if (!bp.version.Equals(new Version(version.Substring(1))))
-									{
-										update = true;
-									}
-								}
-							}
-							UIModDownloadItem modItem = new UIModDownloadItem(displayname, name, version, author, description, homepage, download, downloads, timeStamp, update, exists);
-							modListAll.Add(modItem);
-						}
-						SortList(null, null);
-					}
+					uITextPanel.SetText("Mod Browser OFFLINE..", 0.8f, true);
 				}
 			}
 			catch (Exception e)
 			{
 				ErrorLogger.LogModBrowserException(e);
-				return;
+			}
+			finally
+			{
+				loading = false;
+				reloadButton.SetText("Reload Mods");
+			}
+		}
+
+		private void PopulateFromXML(List<BuildProperties> modBuildProperties, XmlDocument xmlDoc)
+		{
+			foreach (XmlNode xmlNode in xmlDoc.DocumentElement)
+			{
+				if (xmlNode.Name.Equals("update"))
+				{
+					updateAvailable = true;
+					updateText = xmlNode.SelectSingleNode("message").InnerText;
+					updateURL = xmlNode.SelectSingleNode("url").InnerText;
+				}
+				else if (xmlNode.Name.Equals("modlist"))
+				{
+					foreach (XmlNode xmlNode2 in xmlNode)
+					{
+						string displayname = xmlNode2.SelectSingleNode("displayname").InnerText;
+						string name = xmlNode2.SelectSingleNode("name").InnerText;
+						string version = xmlNode2.SelectSingleNode("version").InnerText;
+						string author = xmlNode2.SelectSingleNode("author").InnerText;
+						string description = xmlNode2.SelectSingleNode("description").InnerText;
+						string homepage = xmlNode2.SelectSingleNode("homepage").InnerText;
+						string download = xmlNode2.SelectSingleNode("download").InnerText;
+						string timeStamp = xmlNode2.SelectSingleNode("updateTimeStamp").InnerText;
+						int downloads;
+						Int32.TryParse(xmlNode2.SelectSingleNode("downloads").InnerText, out downloads);
+						bool exists = false;
+						bool update = false;
+						foreach (BuildProperties bp in modBuildProperties)
+						{
+							if (bp.displayName.Equals(displayname))
+							{
+								exists = true;
+								if (!bp.version.Equals(new Version(version.Substring(1))))
+								{
+									update = true;
+								}
+							}
+						}
+						UIModDownloadItem modItem = new UIModDownloadItem(displayname, name, version, author, description, homepage, download, downloads, timeStamp, update, exists);
+						modListAll.Add(modItem);
+					}
+					SortList();
+				}
 			}
 		}
 
@@ -384,7 +361,7 @@ namespace Terraria.ModLoader.UI
 			return urlData;
 		}
 
-		HttpStatusCode GetHttpStatusCode(System.Exception err)
+		HttpStatusCode GetHttpStatusCode(Exception err)
 		{
 			if (err is WebException)
 			{
@@ -502,19 +479,19 @@ namespace Terraria.ModLoader.UI
 		DisplayNameZtoA,
 		DownloadsDescending,
 		DownloadsAscending,
-		RecentlyUpdated,
+		RecentlyUpdated
 	}
 
 	public enum UpdateFilter
 	{
 		All,
 		Available,
-		UpdateOnly,
+		UpdateOnly
 	}
 
 	public enum SearchFilter
 	{
 		Name,
-		Author,
+		Author
 	}
 }

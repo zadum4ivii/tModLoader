@@ -1,5 +1,13 @@
 --- src/Terraria\Terraria.GameContent.UI.Elements\UIList.cs
 +++ src/tModLoader\Terraria.GameContent.UI.Elements\UIList.cs
+@@ -2,6 +_,7 @@
+ using Microsoft.Xna.Framework.Graphics;
+ using System;
+ using System.Collections.Generic;
++using System.Linq;
+ using Terraria.UI;
+ 
+ namespace Terraria.GameContent.UI.Elements
 @@ -33,7 +_,7 @@
  			}
  		}
@@ -9,4 +17,20 @@
  		protected UIScrollbar _scrollbar;
  		private UIElement _innerList = new UIList.UIInnerList();
  		private float _innerListHeight;
+@@ -77,6 +_,15 @@
+ 		{
+ 			this._items.Add(item);
+ 			this._innerList.Append(item);
++			this.UpdateOrder();
++			this._innerList.Recalculate();
++		}
++
++		public virtual void AddRange(IEnumerable<UIElement> items)
++		{
++			this._items.AddRange(items);
++			foreach (var item in items)
++				this._innerList.Append(item);
+ 			this.UpdateOrder();
+ 			this._innerList.Recalculate();
+ 		}
 
