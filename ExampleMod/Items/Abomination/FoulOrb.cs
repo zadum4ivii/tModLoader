@@ -18,7 +18,7 @@ namespace ExampleMod.Items.Abomination
 			item.useAnimation = 45;
 			item.useTime = 45;
 			item.useStyle = 4;
-			item.useSound = 44;
+			item.UseSound = SoundID.Item44;
 			item.consumable = true;
 		}
 
@@ -30,7 +30,7 @@ namespace ExampleMod.Items.Abomination
 		public override bool UseItem(Player player)
 		{
 			NPC.SpawnOnPlayer(player.whoAmI, mod.NPCType("Abomination"));
-			Main.PlaySound(15, (int)player.position.X, (int)player.position.Y, 0);
+			Main.PlaySound(SoundID.Roar, player.position, 0);
 			return true;
 		}
 

@@ -154,10 +154,16 @@ namespace Terraria.ModLoader
 			Array.Resize(ref Main.npcAltTextures, nextNPC);
 			Array.Resize(ref Main.npcCatchable, nextNPC);
 			Array.Resize(ref Main.npcName, nextNPC);
+			Array.Resize(ref Main.npcNameEnglish, nextNPC);
 			Array.Resize(ref Main.npcFrameCount, nextNPC);
 			Array.Resize(ref NPC.killCount, nextNPC);
 			Array.Resize(ref NPC.npcsFoundForCheckActive, nextNPC);
 			Array.Resize(ref EmoteBubble.CountNPCs, nextNPC);
+			Array.Resize(ref NPCID.Sets.TrailingMode, nextNPC);
+			Array.Resize(ref NPCID.Sets.BelongsToInvasionOldOnesArmy, nextNPC);
+			Array.Resize(ref NPCID.Sets.TeleportationImmune, nextNPC);
+			Array.Resize(ref NPCID.Sets.UsesNewTargetting, nextNPC);
+			Array.Resize(ref NPCID.Sets.FighterUsesDD2PortalAppearEffect, nextNPC);
 			Array.Resize(ref NPCID.Sets.StatueSpawnedDropRarity, nextNPC);
 			Array.Resize(ref NPCID.Sets.NoEarlymodeLootWhenSpawnedFromStatue, nextNPC);
 			Array.Resize(ref NPCID.Sets.NeedsExpertScaling, nextNPC);
@@ -182,10 +188,12 @@ namespace Terraria.ModLoader
 			Array.Resize(ref NPCID.Sets.MustAlwaysDraw, nextNPC);
 			Array.Resize(ref NPCID.Sets.ExtraTextureCount, nextNPC);
 			Array.Resize(ref NPCID.Sets.NPCFramingGroup, nextNPC);
+			Array.Resize(ref NPCID.Sets.TownNPCsFramingGroups, nextNPC);
 			for (int k = NPCID.Count; k < nextNPC; k++)
 			{
 				Main.NPCLoaded[k] = true;
 				Main.npcFrameCount[k] = 1;
+				NPCID.Sets.TrailingMode[k] = -1;
 				NPCID.Sets.StatueSpawnedDropRarity[k] = -1f;
 				NPCID.Sets.TrailCacheLength[k] = 10;
 				NPCID.Sets.DangerDetectRange[k] = -1;

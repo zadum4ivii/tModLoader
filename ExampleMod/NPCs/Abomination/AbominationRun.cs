@@ -37,8 +37,8 @@ namespace ExampleMod.NPCs.Abomination
 			npc.lavaImmune = true;
 			npc.noGravity = true;
 			npc.noTileCollide = true;
-			npc.soundHit = 1;
-			npc.soundKilled = 1;
+			npc.HitSound = SoundID.NPCHit1;
+			npc.DeathSound = SoundID.NPCDeath1;
 			npc.buffImmune[24] = true;
 			music = MusicID.Boss2;
 		}
@@ -53,7 +53,7 @@ namespace ExampleMod.NPCs.Abomination
 		{
 			if (npc.localAI[0] == 0f)
 			{
-				Main.PlaySound(15, (int)npc.position.X, (int)npc.position.Y, 0);
+				Main.PlaySound(SoundID.Roar, npc.position, 0);
 				npc.localAI[0] = 1f;
 			}
 			npc.velocity.Y += 1f;

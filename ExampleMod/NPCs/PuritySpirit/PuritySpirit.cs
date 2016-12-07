@@ -35,8 +35,8 @@ namespace ExampleMod.NPCs.PuritySpirit
 			npc.lavaImmune = true;
 			npc.noGravity = true;
 			npc.noTileCollide = true;
-			npc.soundHit = 1;
-			npc.soundKilled = 0;
+			npc.HitSound = SoundID.NPCHit1;
+			npc.DeathSound = null;
 			npc.alpha = 255;
 			for (int k = 0; k < npc.buffImmune.Length; k++)
 			{
@@ -711,7 +711,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 			if (attackProgress >= 180)
 			{
 				npc.dontTakeDamage = false;
-				npc.soundHit = 0;
+				npc.HitSound = null;
 				npc.StrikeNPCNoInteraction(9999, 0f, 0);
 			}
 		}
@@ -953,7 +953,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 			PuritySpiritMessageType type = (PuritySpiritMessageType)reader.ReadByte();
 			if (type == PuritySpiritMessageType.HeroPlayer)
 			{
-				Player player = Main.player[Main.myPlayer];
+				Player player = Main.LocalPlayer;
 				player.GetModPlayer<ExamplePlayer>(mod).heroLives = 3;
 			}
 			else if (type == PuritySpiritMessageType.TargetList)

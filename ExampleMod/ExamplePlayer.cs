@@ -485,14 +485,14 @@ namespace ExampleMod
 					{
 						player.hurtCooldowns[k] = player.longInvince ? 180 : 120;
 					}
-					Main.PlaySound(2, (int)player.position.X, (int)player.position.Y, 29);
+					Main.PlaySound(SoundID.Item29, player.position);
 					reviveTime = 60;
 					return false;
 				}
 			}
-			if (healHurt > 0 && damage == 10.0 && hitDirection == 0 && deathText == " " + Lang.dt[1])
+			if (healHurt > 0 && damage == 10.0 && hitDirection == 0 && damageSource.SourceOtherIndex == 8)
 			{
-				deathText = " was dissolved by holy powers";
+				damageSource = PlayerDeathReason.ByCustomReason(" was dissolved by holy powers");
 			}
 			return true;
 		}
