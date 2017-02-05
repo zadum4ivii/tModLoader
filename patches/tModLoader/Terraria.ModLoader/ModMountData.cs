@@ -42,7 +42,14 @@ namespace Terraria.ModLoader
 		{
 			return mod.Properties.Autoload;
 		}
-
+		public int[] standingFrame { get; set; }
+		public bool idleLoop { get; set; }
+		public int[] dashingFrame { get; set; }
+		public int[] swimmingFrame { get; set; }
+		public int[] idleFrame { get; set; }
+		public int[] flyingFrame { get; set; }
+		public int[] runningFrame { get; set; }
+		public int[] inAirFrame { get; set; }
 		internal void SetupMount(Mount.MountData mountData)
 		{
 			ModMountData newMountData = (ModMountData)MemberwiseClone();
@@ -50,6 +57,34 @@ namespace Terraria.ModLoader
 			mountData.modMountData = newMountData;
 			newMountData.mod = mod;
 			newMountData.SetDefaults();
+			mountData.runningFrameStart = runningFrame[0];
+			mountData.runningFrameCount = runningFrame[1];
+			mountData.runningFrameDelay = runningFrame[2];
+
+			mountData.flyingFrameStart = flyingFrame[0];
+			mountData.flyingFrameCount = flyingFrame[1];
+			mountData.flyingFrameDelay = flyingFrame[2];
+
+			mountData.standingFrameStart = standingFrame[0];
+			mountData.standingFrameCount = standingFrame[1];
+			mountData.standingFrameDelay = standingFrame[2];
+
+			mountData.swimFrameStart = swimmingFrame[0];
+			mountData.swimFrameCount = swimmingFrame[1];
+			mountData.swimFrameDelay = swimmingFrame[2];
+
+			mountData.dashingFrameStart = dashingFrame[0];
+			mountData.dashingFrameCount = dashingFrame[1];
+			mountData.dashingFrameDelay = dashingFrame[2];
+
+			mountData.inAirFrameStart = inAirFrame[0];
+			mountData.inAirFrameCount = inAirFrame[1];
+			mountData.inAirFrameDelay = inAirFrame[2];
+
+			mountData.idleFrameStart = idleFrame[0];
+			mountData.idleFrameCount = idleFrame[1];
+			mountData.idleFrameDelay = idleFrame[2];
+			mountData.idleFrameLoop = idleLoop;
 		}
 
 		public virtual void SetDefaults()
