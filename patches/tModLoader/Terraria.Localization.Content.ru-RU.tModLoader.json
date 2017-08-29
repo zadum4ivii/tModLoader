@@ -1,7 +1,7 @@
 ﻿{
 	"tModLoader": {
-		"MenuModBrowser": "Mod Browser in Russian",
-		"MenuMods": "Mods in Russian",
-		"MenuModSources": "Mod Sources in Russian"
+		"MenuModBrowser": "Браузер модов",
+		"MenuMods": "Моды",
+		"MenuModSources": "Исходники модов"
 	}
 }
